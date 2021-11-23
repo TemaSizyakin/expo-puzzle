@@ -2,13 +2,18 @@ import 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import useWindowSize, { WindowSizeContext } from './src/hooks/useWindowSize';
 
 export default function App() {
+	const [windowSize, onContainerLayout] = useWindowSize();
+
 	return (
-		<View style={styles.container}>
-			<Text>Open up App.tsx to start working on your app!</Text>
-			<StatusBar style="auto" />
-		</View>
+		<WindowSizeContext.Provider value={windowSize}>
+			<View style={styles.container} onLayout={onContainerLayout}>
+				<StatusBar hidden />
+				<Text>{windowSize.width + 'x' + windowSize.height}</Text>
+			</View>
+		</WindowSizeContext.Provider>
 	);
 }
 
