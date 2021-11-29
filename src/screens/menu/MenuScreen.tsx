@@ -12,7 +12,7 @@ interface HomeScreenProps {
 	onPlay: (puzzle: number) => void;
 }
 
-const HomeScreen = ({ slides, onPlay }: HomeScreenProps) => {
+const MenuScreen = ({ slides, onPlay }: HomeScreenProps) => {
 	const window = useContext(WindowSizeContext);
 	const [index, setIndex] = useState(0);
 	const prev = index > 0 ? slides[index - 1] : slides[slides.length - 1];
@@ -37,7 +37,7 @@ const HomeScreen = ({ slides, onPlay }: HomeScreenProps) => {
 	useEffect(() => {
 		playTransition.value = 1;
 		playTransition.value = withTiming(0, { duration: 1000 });
-	}, [index]);
+	}, [index, playTransition]);
 
 	const fill = useSharedValue(0);
 	const fillColor = useSharedValue(Colors.red);
@@ -99,4 +99,4 @@ const HomeScreen = ({ slides, onPlay }: HomeScreenProps) => {
 	);
 };
 
-export default HomeScreen;
+export default MenuScreen;

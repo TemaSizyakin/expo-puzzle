@@ -1,8 +1,8 @@
 import React, { ReactElement, useContext, useEffect } from 'react';
-import { Image, StyleSheet, View } from 'react-native';
+import { Image, Pressable, StyleSheet, View } from 'react-native';
 import { SlideProps } from './Slide';
 import Wave, { Side } from './Wave';
-import { PanGestureHandler, State, TapGestureHandler, HandlerStateChangeEvent } from 'react-native-gesture-handler';
+import { PanGestureHandler } from 'react-native-gesture-handler';
 import Animated, {
 	runOnJS,
 	useAnimatedGestureHandler,
@@ -24,6 +24,11 @@ interface SliderProps {
 	navigateNext: () => void;
 	gestureX: Animated.SharedValue<number>;
 }
+
+type AnimatedContext = {
+	offsetX: number,
+	offsetY: number,
+};
 
 const Slider = ({ index, children: current, prev, next, navigatePrev, navigateNext, gestureX }: SliderProps) => {
 	const window = useContext(WindowSizeContext);
@@ -53,17 +58,17 @@ const Slider = ({ index, children: current, prev, next, navigatePrev, navigateNe
 		},
 	);
 	const onGestureEvent = useAnimatedGestureHandler({
-		onStart: ({ x, y }, context) => {
+		onStart: ({ x, y }, context: AnimatedContext) => {
 			if (x < handleWidth) {
 				activeSide.value = Side.LEFT;
 				zIndexLeft.value = 100;
-				context.startX = leftX.value - x;
-				context.startY = leftY.value - y;
+				context.offsetX = leftX.value - x;
+				context.offsetY = leftY.value - y;
 			} else if (x > window.width - handleWidth) {
 				activeSide.value = Side.RIGHT;
 				zIndexLeft.value = 0;
-				context.startX = window.width - rightX.value - x;
-				context.startY = rightY.value - y;
+				context.offsetX = window.width - rightX.value - x;
+				context.offsetY = rightY.value - y;
 			} else {
 				activeSide.value = Side.NONE;
 			}
@@ -71,12 +76,12 @@ const Slider = ({ index, children: current, prev, next, navigatePrev, navigateNe
 		onActive: ({ x, y }, context) => {
 			if (activeSide.value === Side.LEFT) {
 				// leftX.value = Math.max(x, marginWidth);
-				leftX.value = context.startX + x;
-				leftY.value = context.startY + y;
+				leftX.value = context.offsetX + x;
+				leftY.value = context.offsetY + y;
 			} else if (activeSide.value === Side.RIGHT) {
 				// rightX.value = Math.max(window.width - x, marginWidth);
-				rightX.value = -context.startX + window.width - x;
-				rightY.value = context.startY + y;
+				rightX.value = -context.offsetX + window.width - x;
+				rightY.value = context.offsetY + y;
 			}
 		},
 		onEnd: ({ x, velocityX, velocityY }) => {
@@ -130,24 +135,20 @@ const Slider = ({ index, children: current, prev, next, navigatePrev, navigateNe
 		rightX.value = withSpring(handleWidth);
 	}, [index, leftX, rightX, handleWidth]);
 
-	const onPrevTap = (event: HandlerStateChangeEvent) => {
-		if (event.nativeEvent.state === State.ACTIVE) {
-			activeSide.value = Side.LEFT;
-			zIndexLeft.value = 100;
-			leftX.value = withTiming(window.width, { duration: 500 }, () => {
-				runOnJS(navigatePrev)();
-			});
-		}
+	const onPrevTap = () => {
+		activeSide.value = Side.LEFT;
+		zIndexLeft.value = 100;
+		leftX.value = withTiming(window.width, { duration: 500 }, () => {
+			runOnJS(navigatePrev)();
+		});
 	};
 
-	const onNextTap = (event: HandlerStateChangeEvent) => {
-		if (event.nativeEvent.state === State.ACTIVE) {
-			activeSide.value = Side.RIGHT;
-			zIndexLeft.value = 0;
-			rightX.value = withTiming(window.width, { duration: 500 }, () => {
-				runOnJS(navigateNext)();
-			});
-		}
+	const onNextTap = () => {
+		activeSide.value = Side.RIGHT;
+		zIndexLeft.value = 0;
+		rightX.value = withTiming(window.width, { duration: 500 }, () => {
+			runOnJS(navigateNext)();
+		});
 	};
 
 	const leftSideStyle = useAnimatedStyle(() => ({
@@ -166,77 +167,80 @@ const Slider = ({ index, children: current, prev, next, navigatePrev, navigateNe
 	const animatedNextButtonStyle = useAnimatedStyle(() => {
 		return {
 			top: rightY.value - buttonSize / 2,
+			// left: window.width - rightX.value + (handleWidth-buttonSize)/2,
 			right: rightX.value - (handleWidth + buttonSize) / 2,
-			// zIndexLeft: zIndexLeft.value + 1,
+			zIndexLeft: zIndexLeft.value - 1,
 			zIndex: 11,
 			opacity: Math.max(0, 1 - (3 * (rightX.value - handleWidth)) / window.width),
 		};
 	});
 
 	return (
+		// <View style={StyleSheet.absoluteFill}>
 		<PanGestureHandler onGestureEvent={onGestureEvent}>
 			<Animated.View style={StyleSheet.absoluteFill}>
 				{current}
 				{prev && (
 					<Animated.View style={[StyleSheet.absoluteFill, leftSideStyle]} pointerEvents="none">
-						<Wave side={Side.LEFT} x={leftX} y={leftY} isTransitioning={isTransitioningLeft}>
+						<Wave side={Side.LEFT} x={leftX} y={leftY}>
 							{prev}
 						</Wave>
 					</Animated.View>
 				)}
 				{next && (
 					<View style={[StyleSheet.absoluteFill, { zIndex: 10 }]} pointerEvents="none">
-						<Wave side={Side.RIGHT} x={rightX} y={rightY} isTransitioning={isTransitioningRight}>
+						<Wave side={Side.RIGHT} x={rightX} y={rightY}>
 							{next}
 						</Wave>
 					</View>
 				)}
-				<TapGestureHandler onHandlerStateChange={onPrevTap}>
-					<Animated.View
-						style={[
-							{
-								position: 'absolute',
-								width: buttonSize,
-								height: buttonSize,
-								alignItems: 'center',
-								justifyContent: 'center',
-								borderRadius: buttonSize / 2,
-								// borderWidth: 2,
-								// borderColor: 'white',
-								backgroundColor: '#0002',
-							},
-							animatedPrevButtonStyle,
-						]}>
+				<Animated.View
+					style={[
+						{
+							position: 'absolute',
+							width: buttonSize,
+							height: buttonSize,
+							alignItems: 'center',
+							justifyContent: 'center',
+							borderRadius: buttonSize / 2,
+							// borderWidth: 2,
+							// borderColor: 'white',
+							// backgroundColor: '#0002',
+						},
+						animatedPrevButtonStyle,
+					]}>
+					<Pressable onPress={onPrevTap}>
 						<Image
 							source={require('../../../assets/images/arrow.png')}
 							style={{ width: 0.9 * buttonSize, height: 0.9 * buttonSize }}
 						/>
-					</Animated.View>
-				</TapGestureHandler>
-				<TapGestureHandler onHandlerStateChange={onNextTap}>
-					<Animated.View
-						style={[
-							{
-								position: 'absolute',
-								width: buttonSize,
-								height: buttonSize,
-								alignItems: 'center',
-								justifyContent: 'center',
-								borderRadius: buttonSize / 2,
-								// borderWidth: 2,
-								// borderColor: 'white',
-								backgroundColor: '#0002',
-							},
-							animatedNextButtonStyle,
-						]}>
+					</Pressable>
+				</Animated.View>
+				<Animated.View
+					style={[
+						{
+							position: 'absolute',
+							width: buttonSize,
+							height: buttonSize,
+							alignItems: 'center',
+							justifyContent: 'center',
+							borderRadius: buttonSize / 2,
+							// borderWidth: 2,
+							// borderColor: 'white',
+							// backgroundColor: '#0002',
+						},
+						animatedNextButtonStyle,
+					]}>
+					<Pressable onPress={onNextTap}>
 						<Image
 							source={require('../../../assets/images/arrow.png')}
 							style={{ width: 0.9 * buttonSize, height: 0.9 * buttonSize, transform: [{ scaleX: -1 }] }}
 						/>
-					</Animated.View>
-				</TapGestureHandler>
+					</Pressable>
+				</Animated.View>
 			</Animated.View>
 		</PanGestureHandler>
+		// </View>
 	);
 };
 

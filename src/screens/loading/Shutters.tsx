@@ -1,44 +1,38 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { WindowSizeContext } from '../../hooks/useWindowSize';
 
 interface ShuttersProps {
-	opened: boolean;
+	isOpened: boolean;
 	backgroundColor: string;
 	duration?: number;
 }
 
-const Shutters = ({ opened, backgroundColor, duration = 600 }: ShuttersProps) => {
+const Shutters = ({ isOpened, backgroundColor, duration = 600 }: ShuttersProps) => {
 	const window = useContext(WindowSizeContext);
-	const radius = Math.min(window.width, window.height) / 4;
+	const borderRadius = Math.min(window.width, window.height) / 4;
+
+	const opened = useSharedValue(isOpened ? 1 : 0);
+	useEffect(() => {
+		opened.value = withTiming(isOpened ? 1 : 0, { duration });
+	}, [isOpened, opened, duration]);
+
 	const topLeftAnimatedStyle = useAnimatedStyle(() => ({
-		borderBottomRightRadius: withTiming(opened ? radius : 0, { duration: duration / 2 }),
-		transform: [
-			{ translateX: withTiming(opened ? -window.width / 2 : 0, { duration }) },
-			{ translateY: withTiming(opened ? -window.height / 2 : 0, { duration }) },
-		],
+		borderBottomRightRadius: 2 * borderRadius * opened.value,
+		transform: [{ translateX: (-window.width / 2) * opened.value }, { translateY: (-window.height / 2) * opened.value }],
 	}));
 	const topRightAnimatedStyle = useAnimatedStyle(() => ({
-		borderBottomLeftRadius: withTiming(opened ? radius : 0, { duration: duration / 2 }),
-		transform: [
-			{ translateX: withTiming(opened ? window.width / 2 : 0, { duration }) },
-			{ translateY: withTiming(opened ? -window.height / 2 : 0, { duration }) },
-		],
+		borderBottomLeftRadius: 2 * borderRadius * opened.value,
+		transform: [{ translateX: (window.width / 2) * opened.value }, { translateY: (-window.height / 2) * opened.value }],
 	}));
 	const bottomLeftAnimatedStyle = useAnimatedStyle(() => ({
-		borderTopRightRadius: withTiming(opened ? radius : 0, { duration: duration / 2 }),
-		transform: [
-			{ translateX: withTiming(opened ? -window.width / 2 : 0, { duration }) },
-			{ translateY: withTiming(opened ? window.height / 2 : 0, { duration }) },
-		],
+		borderTopRightRadius: 2 * borderRadius * opened.value,
+		transform: [{ translateX: (-window.width / 2) * opened.value }, { translateY: (window.height / 2) * opened.value }],
 	}));
 	const bottomRightAnimatedStyle = useAnimatedStyle(() => ({
-		borderTopLeftRadius: withTiming(opened ? radius : 0, { duration: duration / 2 }),
-		transform: [
-			{ translateX: withTiming(opened ? window.width / 2 : 0, { duration }) },
-			{ translateY: withTiming(opened ? window.height / 2 : 0, { duration }) },
-		],
+		borderTopLeftRadius: 2 * borderRadius * opened.value,
+		transform: [{ translateX: (window.width / 2) * opened.value }, { translateY: (window.height / 2) * opened.value }],
 	}));
 
 	return (

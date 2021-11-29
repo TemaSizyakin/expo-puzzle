@@ -7,19 +7,19 @@ import { WindowSizeContext } from '../../hooks/useWindowSize';
 
 interface LoadingScreenProps {
 	startClosed: boolean;
-	loaded: boolean;
+	isLoaded: boolean;
 }
 
-const LoadingScreen = ({ startClosed, loaded }: LoadingScreenProps) => {
+const LoadingScreen = ({ startClosed, isLoaded }: LoadingScreenProps) => {
 	const window = useContext(WindowSizeContext);
-	const [opened, setOpened] = useState(!startClosed);
+	const [isOpened, setIsOpened] = useState(!startClosed);
 	useEffect(() => {
-		setOpened(loaded);
-	}, [loaded]);
+		setIsOpened(isLoaded);
+	}, [isLoaded]);
 	return (
 		<View style={StyleSheet.absoluteFill}>
-			<Shutters opened={opened} backgroundColor={Colors.royalblue} />
-			<Loading opened={opened} size={Math.min(window.width, window.height) / 3} />
+			<Shutters isOpened={isOpened} backgroundColor={Colors.royalblue} />
+			<Loading isOpened={isOpened} size={Math.min(window.width, window.height) / 3} />
 		</View>
 	);
 };

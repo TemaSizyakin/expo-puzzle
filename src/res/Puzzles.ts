@@ -8,7 +8,7 @@ const Puzzles = [
 	{
 		id: 'house',
 		title: 'Деревня',
-		color: '#4cd964',
+		color: '#06c726',
 		size: { x: 3, y: 4 },
 	},
 	{

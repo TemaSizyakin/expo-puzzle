@@ -4,28 +4,26 @@ import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withTiming } fr
 import Images from '../../res/Images';
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 
-const Duration = 2000;
-
 interface LoadingProps {
 	size: number;
-	opened: boolean;
+	isOpened: boolean;
+	duration?: number;
 }
 
-const Loading = ({ size, opened }: LoadingProps) => {
+const Loading = ({ size, isOpened, duration = 2000 }: LoadingProps) => {
 	const imageSize = 0.8 * size;
 	const pieceStyle: ImageStyle = { position: 'absolute', width: imageSize, height: imageSize };
 
+	const opened = useSharedValue(isOpened ? 1 : 0);
+	useEffect(() => {
+		opened.value = withTiming(isOpened ? 1 : 0, { duration: duration / 4 });
+	}, [isOpened, opened, duration]);
 	const rotate = useSharedValue(0);
 	const translate = useSharedValue(0);
 	useEffect(() => {
-		if (opened) {
-			rotate.value = rotate.value;
-			translate.value = withTiming(3, { duration: Duration / 4 });
-		} else {
-			rotate.value = withRepeat(withTiming(360, { duration: Duration }), -1, true);
-			translate.value = withRepeat(withTiming(0.25, { duration: Duration / 2 }), -1, true);
-		}
-	}, [opened, rotate, translate]);
+		rotate.value = withRepeat(withTiming(360, { duration }), -1, true);
+		translate.value = withRepeat(withTiming(0.25, { duration: duration / 2 }), -1, true);
+	}, [rotate, translate, duration]);
 	const animatedViewStyle = useAnimatedStyle(() => ({
 		transform: [{ rotateZ: `${rotate.value}deg` }],
 	}));
@@ -33,8 +31,8 @@ const Loading = ({ size, opened }: LoadingProps) => {
 	const animatedPieceStyles = pieces.map(i =>
 		useAnimatedStyle(() => ({
 			transform: [
-				{ translateX: (i === 1 || i === 2 ? 1 : -1) * imageSize * (0.3 + translate.value) },
-				{ translateY: (i === 2 || i === 3 ? 1 : -1) * imageSize * (0.3 + translate.value) },
+				{ translateX: (i === 1 || i === 2 ? 1 : -1) * imageSize * (0.3 + translate.value + 3 * opened.value) },
+				{ translateY: (i === 2 || i === 3 ? 1 : -1) * imageSize * (0.3 + translate.value + 3 * opened.value) },
 				{ rotateZ: `${(i === 0 || i === 2 ? 1 : -2) * rotate.value + (i === 0 || i === 2 ? 90 : 0)}deg` },
 			],
 		})),
