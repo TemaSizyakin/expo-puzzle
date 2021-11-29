@@ -18,8 +18,8 @@ import snapPoint from '../../utils/snapPoint';
 interface SliderProps {
 	index: number;
 	children: ReactElement<SlideProps>;
-	prev?: ReactElement<SlideProps>;
-	next?: ReactElement<SlideProps>;
+	prevSlide?: ReactElement<SlideProps>;
+	nextSlide?: ReactElement<SlideProps>;
 	navigatePrev: () => void;
 	navigateNext: () => void;
 	gestureX: Animated.SharedValue<number>;
@@ -30,7 +30,7 @@ type AnimatedContext = {
 	offsetY: number,
 };
 
-const Slider = ({ index, children: current, prev, next, navigatePrev, navigateNext, gestureX }: SliderProps) => {
+const Slider = ({ index, children: currentSlide, prevSlide, nextSlide, navigatePrev, navigateNext, gestureX }: SliderProps) => {
 	const window = useContext(WindowSizeContext);
 	const handleWidth = window.width / 6;
 	const handleY = 0.75 * window.height;
@@ -176,21 +176,20 @@ const Slider = ({ index, children: current, prev, next, navigatePrev, navigateNe
 	});
 
 	return (
-		// <View style={StyleSheet.absoluteFill}>
 		<PanGestureHandler onGestureEvent={onGestureEvent}>
 			<Animated.View style={StyleSheet.absoluteFill}>
-				{current}
-				{prev && (
+				{currentSlide}
+				{prevSlide && (
 					<Animated.View style={[StyleSheet.absoluteFill, leftSideStyle]} pointerEvents="none">
 						<Wave side={Side.LEFT} x={leftX} y={leftY}>
-							{prev}
+							{prevSlide}
 						</Wave>
 					</Animated.View>
 				)}
-				{next && (
+				{nextSlide && (
 					<View style={[StyleSheet.absoluteFill, { zIndex: 10 }]} pointerEvents="none">
 						<Wave side={Side.RIGHT} x={rightX} y={rightY}>
-							{next}
+							{nextSlide}
 						</Wave>
 					</View>
 				)}
@@ -240,7 +239,6 @@ const Slider = ({ index, children: current, prev, next, navigatePrev, navigateNe
 				</Animated.View>
 			</Animated.View>
 		</PanGestureHandler>
-		// </View>
 	);
 };
 

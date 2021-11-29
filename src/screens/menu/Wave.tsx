@@ -23,9 +23,12 @@ interface WaveProps {
 
 const Wave = ({ side, children, x, y }: WaveProps) => {
 	const window = useContext(WindowSizeContext);
+	// { x, y } contains coordinates of gesture and the tip of the wave
+	// x1 calculates the coordinate of wavefront
 	const x1 = useDerivedValue(() => {
 		return x.value < window.width / 3 ? 0 : 1.5 * x.value - 0.5 * window.width;
 	});
+	// Drawing an animated path using the cubic Bezier curves with relative coordinates (c)
 	const animatedProps = useAnimatedProps(() => {
 		const dX = x.value < window.width / 3 ? x.value / 2 : (window.width / 2 - x.value / 2) / 2;
 		const dY = 0.75 * x.value;
@@ -52,21 +55,24 @@ const Wave = ({ side, children, x, y }: WaveProps) => {
 		</Svg>
 	);
 
+	// Using the Svg wave path as a mask for a slide
+	if (Platform.OS !== 'android') {
+		return (
+			<MaskedView style={StyleSheet.absoluteFill} maskElement={maskElement}>
+				{children}
+			</MaskedView>
+		);
+	}
+
+	// As Android did not have hardware acceleration for masking, the fix is to move new Slide with the wave instead of masking it
 	const androidStyle = useAnimatedStyle(() => {
 		return { transform: [{ translateX: side === Side.RIGHT ? window.width - x1.value : -window.width + x1.value }] };
 	});
-	if (Platform.OS === 'android') {
-		return (
-			<View style={StyleSheet.absoluteFill}>
-				{maskElement}
-				<Animated.View style={[StyleSheet.absoluteFill, androidStyle]}>{children}</Animated.View>
-			</View>
-		);
-	}
 	return (
-		<MaskedView style={StyleSheet.absoluteFill} maskElement={maskElement}>
-			{children}
-		</MaskedView>
+		<View style={StyleSheet.absoluteFill}>
+			{maskElement}
+			<Animated.View style={[StyleSheet.absoluteFill, androidStyle]}>{children}</Animated.View>
+		</View>
 	);
 };
 

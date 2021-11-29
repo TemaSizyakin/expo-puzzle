@@ -8,63 +8,69 @@ import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTi
 import Colors from '../../res/Colors';
 
 interface HomeScreenProps {
-	slides: Array<{ id: string, title: string, color: string, size: { x: number, y: number } }>;
-	onPlay: (puzzle: number) => void;
+	slides: Array<{ id: string, title: string, color: string }>;
+	onPlay: (index: number) => void;
 }
 
 const MenuScreen = ({ slides, onPlay }: HomeScreenProps) => {
 	const window = useContext(WindowSizeContext);
+
 	const [index, setIndex] = useState(0);
-	const prev = index > 0 ? slides[index - 1] : slides[slides.length - 1];
-	const next = index < slides.length - 1 ? slides[index + 1] : slides[0];
+	const currentSlide = slides[index];
+	const prevSlide = index > 0 ? slides[index - 1] : slides[slides.length - 1];
+	const nextSlide = index < slides.length - 1 ? slides[index + 1] : slides[0];
 	const navigatePrev = () => {
 		setIndex(index > 0 ? index - 1 : slides.length - 1);
 	};
 	const navigateNext = () => {
 		setIndex(index < slides.length - 1 ? index + 1 : 0);
 	};
+
+	// Animated style of Play button with slight movements
 	const gestureX = useSharedValue(0);
-	const playOpacity = useSharedValue(1);
-	const playTransition = useSharedValue(0);
+	const playButtonOpacity = useSharedValue(1);
+	const playButtonTransition = useSharedValue(0);
+	useEffect(() => {
+		playButtonTransition.value = 1;
+		playButtonTransition.value = withTiming(0, { duration: 1000 });
+	}, [index, playButtonTransition]);
 	const playButtonAnimatedStyle = useAnimatedStyle(() => ({
-		opacity: playOpacity.value,
+		opacity: playButtonOpacity.value,
 		transform: [
-			{ translateX: playTransition.value > 0 ? withSpring(0) : gestureX.value / 10 },
-			{ scaleX: playTransition.value > 0 ? withSpring(1) : 1 + Math.abs(gestureX.value / 10) / window.width },
-			{ scaleY: playTransition.value > 0 ? withSpring(1) : 1 - Math.abs(gestureX.value / 10) / window.width },
+			{ translateX: playButtonTransition.value === 0 ? gestureX.value / 10 : withSpring(0) },
+			{ scaleX: playButtonTransition.value === 0 ? 1 + Math.abs(gestureX.value / 10) / window.width : withSpring(1) },
+			{ scaleY: playButtonTransition.value === 0 ? 1 - Math.abs(gestureX.value / 10) / window.width : withSpring(1) },
 		],
 	}));
-	useEffect(() => {
-		playTransition.value = 1;
-		playTransition.value = withTiming(0, { duration: 1000 });
-	}, [index, playTransition]);
 
+	// Animated style of circular colored fill view after pressing the Play button
 	const fill = useSharedValue(0);
 	const fillColor = useSharedValue(Colors.red);
+	const fillAnimatedStyle = useAnimatedStyle(() => ({
+		backgroundColor: fillColor.value,
+		transform: [{ scale: 8 * fill.value }],
+	}));
 	const onPlayPress = () => {
 		if (fill.value === 0) {
-			fill.value = withTiming(8, { duration: 500 }, () => {
+			fill.value = withTiming(1, { duration: 500 }, () => {
 				runOnJS(onPlay)(index);
 			});
 			// fillColor.value = withDelay(200, withTiming(Colors.yellow));
-			playOpacity.value = withTiming(0);
+			playButtonOpacity.value = withTiming(0);
 		}
 	};
-	const fillAnimatedStyle = useAnimatedStyle(() => ({
-		backgroundColor: fillColor.value,
-		transform: [{ scale: fill.value }],
-	}));
+
 	return (
 		<View style={StyleSheet.absoluteFill}>
 			<Slider
 				key={index}
 				index={index}
-				prev={prev && <Slide slide={prev} />}
-				next={next && <Slide slide={next} />}
+				prevSlide={prevSlide && <Slide slide={prevSlide} />}
+				nextSlide={nextSlide && <Slide slide={nextSlide} />}
 				navigatePrev={navigatePrev}
 				navigateNext={navigateNext}
 				gestureX={gestureX}>
-				<Slide slide={slides[index]} />
+				<Slide slide={currentSlide} />
 			</Slider>
 			<Animated.View
 				style={[

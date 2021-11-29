@@ -25,15 +25,16 @@ export default function App() {
 	const [windowSize, onContainerLayout] = useWindowSize();
 	const ui = Object.values(Images.UI);
 	const covers = Puzzles.map(puzzle => Images[puzzle.id].cover);
-	const [assetsLoaded] = useAssets([...ui, ...covers]);
-	const [fontsLoaded] = useFonts(Fonts);
 	const [puzzle, setPuzzle] = useState(0);
+	// const [assetsLoaded] =
+	useAssets([...ui, ...covers]);
+	// const [fontsLoaded] =
+	useFonts(Fonts);
 	// useEffect(() => {
 	// 	if (fontsLoaded && !!assetsLoaded) {
-	// 		setAppState(AppState.LOADED_HOME);
-	// 		setTimeout(() => {
-	// 			setAppState(AppState.HOME);
-	// 		}, 1000);
+	// 		setScreen(Screen.MENU);
+	// 		setIsLoaded(true);
+	// 		setTimeout(() => { setIsLoading(false); }, 1000);
 	// 	}
 	// }, [fontsLoaded, assetsLoaded]);
 	useEffect(() => {
