@@ -29,6 +29,7 @@ const Loading = ({ size, isOpened, duration = 2000 }: LoadingProps) => {
 	}));
 	const pieces = [0, 1, 2, 3];
 	const animatedPieceStyles = pieces.map(i =>
+		// eslint-disable-next-line react-hooks/rules-of-hooks
 		useAnimatedStyle(() => ({
 			transform: [
 				{ translateX: (i === 1 || i === 2 ? 1 : -1) * imageSize * (0.3 + translate.value + 3 * opened.value) },

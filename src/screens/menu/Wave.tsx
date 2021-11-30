@@ -65,6 +65,7 @@ const Wave = ({ side, children, x, y }: WaveProps) => {
 	}
 
 	// As Android did not have hardware acceleration for masking, the fix is to move new Slide with the wave instead of masking it
+	// eslint-disable-next-line react-hooks/rules-of-hooks
 	const androidStyle = useAnimatedStyle(() => {
 		return { transform: [{ translateX: side === Side.RIGHT ? window.width - x1.value : -window.width + x1.value }] };
 	});

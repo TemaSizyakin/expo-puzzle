@@ -1,7 +1,7 @@
 import 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import useWindowSize, { WindowSizeContext } from './src/hooks/useWindowSize';
 import MenuScreen from './src/screens/menu/MenuScreen';
 import { useFonts } from 'expo-font';
@@ -11,6 +11,8 @@ import Fonts from './src/res/Fonts';
 import Puzzles from './src/res/Puzzles';
 import LoadingScreen from './src/screens/loading/LoadingScreen';
 import GameScreen from './src/screens/game/GameScreen';
+import { BackHandler } from 'react-native';
+import * as ScreenOrientation from 'expo-screen-orientation';
 
 enum Screen {
 	NONE,
@@ -23,6 +25,9 @@ export default function App() {
 	const [isLoading, setIsLoading] = useState(true);
 	const [isLoaded, setIsLoaded] = useState(false);
 	const [windowSize, onContainerLayout] = useWindowSize();
+	useEffect(() => {
+		ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT);
+	}, []);
 	const ui = Object.values(Images.UI);
 	const covers = Puzzles.map(puzzle => Images[puzzle.id].cover);
 	const [puzzle, setPuzzle] = useState(0);
@@ -64,6 +69,20 @@ export default function App() {
 		}, 1000);
 	};
 
+	if (Platform.OS === 'android') {
+		// eslint-disable-next-line react-hooks/rules-of-hooks
+		useEffect(() => {
+			const backAction = () => {
+				if (screen === Screen.GAME && !isLoading) {
+					onCloseGame();
+				}
+				return true;
+			};
+			BackHandler.addEventListener('hardwareBackPress', backAction);
+			return () => BackHandler.removeEventListener('hardwareBackPress', backAction);
+		}, [screen, isLoading]);
+	}
+
 	return (
 		<WindowSizeContext.Provider value={windowSize}>
 			<View style={{ flex: 1 }} onLayout={onContainerLayout}>
@@ -71,6 +90,7 @@ export default function App() {
 				{screen === Screen.MENU && <MenuScreen slides={Puzzles} onPlay={onPlay} />}
 				{screen === Screen.GAME && <GameScreen puzzle={Puzzles[puzzle]} onCloseGame={onCloseGame} />}
 				{isLoading && <LoadingScreen startClosed={screen === Screen.NONE} isLoaded={isLoaded} />}
+				{/*<GameScreen puzzle={Puzzles[0]} onCloseGame={() => {}} />*/}
 			</View>
 		</WindowSizeContext.Provider>
 	);

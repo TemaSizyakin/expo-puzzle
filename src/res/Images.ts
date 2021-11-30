@@ -4,6 +4,7 @@ const Images: { [key: string]: any } = {
 		loadingPiece: require('../../assets/images/piece.png'),
 		arrowIcon: require('../../assets/images/arrow.png'),
 	},
+	lottieLoading: require('../../assets/lottie/squares.json'),
 	bullfinch: {
 		cover: require('../../assets/images/bullfinch/bullfinch.png'),
 		11: require('../../assets/images/bullfinch/11.png'),
