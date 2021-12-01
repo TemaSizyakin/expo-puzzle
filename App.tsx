@@ -89,8 +89,8 @@ export default function App() {
 				<StatusBar hidden />
 				{screen === Screen.MENU && <MenuScreen slides={Puzzles} onPlay={onPlay} />}
 				{screen === Screen.GAME && <GameScreen puzzle={Puzzles[puzzle]} onCloseGame={onCloseGame} />}
+				{/*{screen === Screen.MENU && <GameScreen puzzle={Puzzles[0]} onCloseGame={() => {}} />}*/}
 				{isLoading && <LoadingScreen startClosed={screen === Screen.NONE} isLoaded={isLoaded} />}
-				{/*<GameScreen puzzle={Puzzles[0]} onCloseGame={() => {}} />*/}
 			</View>
 		</WindowSizeContext.Provider>
 	);

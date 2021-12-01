@@ -5,8 +5,9 @@ import Images from '../../res/Images';
 import { WindowSizeContext } from '../../hooks/useWindowSize';
 import { useState } from 'react';
 import LottieView from 'lottie-react-native';
-import { useSharedValue } from 'react-native-reanimated';
+import Animated, { useAnimatedGestureHandler, useSharedValue, withDelay, withSpring, withTiming } from 'react-native-reanimated';
 import Piece from './Piece';
+import { PanGestureHandler } from 'react-native-gesture-handler';
 
 interface GameScreenProps {
 	puzzle: { id: string, size: { x: number, y: number } };
@@ -24,23 +25,39 @@ const initRect: Rect = { x: 0, y: 0, width: 0, height: 0 };
 const GameScreen = ({ puzzle, onCloseGame }: GameScreenProps) => {
 	// const [isLoading, setIsLoading] = useState(true);
 
-	const window = useContext(WindowSizeContext);
-	const [SquareSize, setSquareSize] = useState(0);
-	const [Scroll, setScroll] = useState<Rect>(initRect);
-	const [Board, setBoard] = useState<Rect>(initRect);
+	const WINDOW = useContext(WindowSizeContext);
+	const [SIZE, setSIZE] = useState(0);
+	const [SCROLL, setSCROLL] = useState<Rect>(initRect);
+	const [BOARD, setBOARD] = useState<Rect>(initRect);
 	useEffect(() => {
-		const squareSize = Math.min(window.height / (puzzle.size.y + 1.67 + 1.2), window.width / puzzle.size.x);
-		setSquareSize(squareSize);
-		setScroll({ x: 0, y: window.height - 1.67 * squareSize, width: window.width, height: 1.67 * squareSize });
-		setBoard({
-			x: (window.width - squareSize * puzzle.size.x) / 2,
-			y: 0.6 * squareSize,
-			width: squareSize * puzzle.size.x,
-			height: squareSize * puzzle.size.y,
+		const square = Math.min(WINDOW.height / (puzzle.size.y + 1.67 + 1.2), WINDOW.width / puzzle.size.x);
+		setSIZE(square);
+		setSCROLL({ x: 0, y: WINDOW.height - 1.67 * square, width: WINDOW.width, height: 1.67 * square });
+		setBOARD({
+			x: (WINDOW.width - square * puzzle.size.x) / 2,
+			y: 0.6 * square,
+			width: square * puzzle.size.x,
+			height: square * puzzle.size.y,
 		});
-	}, [window, puzzle]);
+	}, [WINDOW, puzzle]);
+	const scrollToAbsolute = (x: number, y: number) => {
+		'worklet';
+		return { x: x + WINDOW.width / 2 - 0.5 * SIZE, y: y + SCROLL.y + (SCROLL.height - SIZE) / 2 };
+	};
+	const boardToAbsolute = (x: number, y: number) => {
+		'worklet';
+		return { x: x * SIZE + BOARD.x, y: y * SIZE + BOARD.y };
+	};
+	const absoluteToBoard = (x: number, y: number) => {
+		'worklet';
+		return { x: (x - BOARD.x) / SIZE, y: (y - BOARD.y) / SIZE };
+	};
 	const [pieces, setPieces] = useState<Array<{ index: string, boardX: number, boardY: number, scrollX: number, image: number }>>([]);
+	const [piecesInScroll, setPiecesInScroll] = useState(1);
 	const scroll = useSharedValue(-Math.trunc((puzzle.size.x * puzzle.size.y) / 2));
+	useEffect(() => {
+		scroll.value = withDelay(500, withTiming(Math.floor((puzzle.size.x * puzzle.size.y) / 2), { duration: 1000 }));
+	}, [scroll, puzzle]);
 
 	useEffect(() => {
 		const loadedPieces = [];
@@ -60,7 +77,51 @@ const GameScreen = ({ puzzle, onCloseGame }: GameScreenProps) => {
 		// 	setIsLoading(false);
 		// });
 		setPieces(loadedPieces);
+		setPiecesInScroll(loadedPieces.length);
 	}, [puzzle]);
+
+	useEffect(() => {
+		if (piecesInScroll === 0) {
+			scroll.value = 0;
+		} else if (scroll.value > piecesInScroll - 1) {
+			scroll.value = withTiming(piecesInScroll - 1);
+		}
+	}, [piecesInScroll, scroll]);
+
+	// let piecesInScroll = 0;
+	// for (let i = 0; i < pieces.length; i++) {
+	// 	if (pieces[i].scrollX >= 0) {
+	// 		pieces[i].scrollX = piecesInScroll;
+	// 		piecesInScroll++;
+	// 	}
+	// }
+	// if (piecesInScroll === 0) {
+	// 	scroll.value = 0;
+	// } else if (scroll.value > piecesInScroll - 1) {
+	// 	scroll.value = withTiming(piecesInScroll - 1);
+	// }
+	// console.log('Pieces in scroll:', piecesInScroll, scroll.value);
+
+	const onGestureLeftScroll = useAnimatedGestureHandler({
+		onStart: (_, context: { startX: number }) => {
+			context.startX = WINDOW.width / 2 - scroll.value * SIZE;
+		},
+		onActive: ({ translationX }, context: { startX: number }) => {
+			scroll.value = (WINDOW.width / 2 - context.startX - translationX) / SIZE;
+			if (piecesInScroll === 0) {
+				scroll.value = 0;
+			} else if (scroll.value < -0.45) {
+				scroll.value = -0.45;
+			} else if (scroll.value > piecesInScroll - 0.55) {
+				scroll.value = piecesInScroll - 0.55;
+			}
+			// console.log('Scroll value:', Math.trunc(scroll.value * 100) / 100, 'Pieces on Scroll:', piecesInScroll);
+		},
+		onEnd: ({ velocityX }) => {
+			const dest = Math.max(-0.45, Math.min(piecesInScroll - 0.55, scroll.value - velocityX / 500));
+			scroll.value = withSpring(Math.round(dest)); //withTiming(Math.round(scroll.value - velocityX / 500), { duration: 200 });
+		},
+	});
 
 	// if (isLoading) {
 	// 	return (
@@ -69,16 +130,17 @@ const GameScreen = ({ puzzle, onCloseGame }: GameScreenProps) => {
 	// 		</View>
 	// 	);
 	// }
+
 	return (
 		<View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: Colors.red }}>
 			<Pressable onPress={onCloseGame}>
 				<View
 					style={{
 						position: 'absolute',
-						left: Board.x,
-						top: Board.y,
-						width: Board.width,
-						height: Board.height,
+						left: BOARD.x,
+						top: BOARD.y,
+						width: BOARD.width,
+						height: BOARD.height,
 						backgroundColor: '#fff4',
 					}}
 				/>
@@ -86,16 +148,38 @@ const GameScreen = ({ puzzle, onCloseGame }: GameScreenProps) => {
 			<View
 				style={{
 					position: 'absolute',
-					left: Scroll.x,
-					top: Scroll.y,
-					width: Scroll.width,
-					height: Scroll.height,
+					left: SCROLL.x,
+					top: SCROLL.y,
+					width: SCROLL.width,
+					height: SCROLL.height,
 					backgroundColor: '#fff4',
-				}}>
+				}}
+			/>
+			<View>
 				{pieces.map(piece => (
-					<Piece key={'piece' + piece.index} piece={piece} size={SquareSize} scroll={scroll} />
+					<Piece
+						key={'piece' + piece.index}
+						piece={piece}
+						size={SIZE}
+						scroll={scroll}
+						scrollToAbsolute={scrollToAbsolute}
+						boardToAbsolute={boardToAbsolute}
+						absoluteToBoard={absoluteToBoard}
+					/>
 				))}
 			</View>
+			<PanGestureHandler onGestureEvent={onGestureLeftScroll}>
+				<Animated.View
+					style={{
+						position: 'absolute',
+						width: WINDOW.width, //(WINDOW.width - SCROLL.height) / 2,
+						height: SCROLL.height,
+						bottom: 0,
+						left: 0,
+						backgroundColor: '#00000011',
+					}}
+				/>
+			</PanGestureHandler>
 		</View>
 	);
 };
