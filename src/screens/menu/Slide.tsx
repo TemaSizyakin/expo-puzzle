@@ -1,6 +1,5 @@
 import React, { useContext } from 'react';
 import { View, StyleSheet, Image, Text } from 'react-native';
-import Svg, { Rect } from 'react-native-svg';
 import { WindowSizeContext } from '../../hooks/useWindowSize';
 import Images from '../../res/Images';
 
@@ -19,25 +18,20 @@ const Slide = ({ slide: { id, title, color } }: SlideProps) => {
 	const imageTop = titleHeight + (0.75 * window.height - imageSize.height - titleHeight / 2) / 2;
 	const titleTop = Math.max(0, imageTop / 2 - titleHeight / 2);
 	return (
-		<>
-			<Svg style={StyleSheet.absoluteFill}>
-				<Rect x={0} y={0} width={window.width} height={window.height} fill={color} />
-			</Svg>
-			<View style={[StyleSheet.absoluteFill, { alignItems: 'center' }]}>
-				<View
-					style={{
-						position: 'absolute',
-						top: titleTop,
-						justifyContent: 'center',
-						height: titleHeight,
-					}}>
-					<Text style={{ fontFamily: 'GandiaBold', fontSize: titleHeight / 2, color: 'white' }}>{title}</Text>
-				</View>
-				<View style={{ position: 'absolute', top: imageTop, justifyContent: 'center' }}>
-					<Image source={Images[id].cover} style={imageSize} />
-				</View>
+		<View style={[StyleSheet.absoluteFill, { alignItems: 'center', backgroundColor: color }]}>
+			<View
+				style={{
+					position: 'absolute',
+					top: titleTop,
+					justifyContent: 'center',
+					height: titleHeight,
+				}}>
+				<Text style={{ fontFamily: 'GandiaBold', fontSize: titleHeight / 2, color: 'white' }}>{title}</Text>
 			</View>
-		</>
+			<View style={{ position: 'absolute', top: imageTop, justifyContent: 'center' }}>
+				<Image source={Images[id].cover} style={imageSize} />
+			</View>
+		</View>
 	);
 };
 
