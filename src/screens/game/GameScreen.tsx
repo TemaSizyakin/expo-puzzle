@@ -1,15 +1,15 @@
 import React, { useContext, useEffect, useRef } from 'react';
-import { View, StyleSheet, Pressable, Image } from 'react-native';
+import { View, StyleSheet, Image } from 'react-native';
 import Colors from '../../res/Colors';
 import { WindowSizeContext } from '../../hooks/useWindowSize';
 import { useState } from 'react';
-import { AntDesign } from '@expo/vector-icons';
 import LottieView from 'lottie-react-native';
 import Animated, { useAnimatedGestureHandler, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import Piece, { PieceType } from './Piece';
 import { PanGestureHandler } from 'react-native-gesture-handler';
 import Lotties from '../../res/Lotties';
-import { PieceUrl } from '../../res/Urls';
+import { PictureUrl, PieceUrl } from '../../res/Urls';
+import CornerButton from './CornerButton';
 
 type Rect = {
 	x: number,
@@ -82,8 +82,9 @@ const GameScreen = ({ puzzle, onClosePress }: GameScreenProps) => {
 			loadedPieces[l].scrollX = l;
 		}
 		const prefetchPromises = loadedPieces.map(piece => Image.prefetch(piece.image));
+		prefetchPromises.push(Image.prefetch(PictureUrl(puzzle.id)));
 		Promise.all(prefetchPromises).then(results => {
-			// console.log(results);
+			console.log(results);
 			setIsLoading(false);
 		});
 		// setIsLoading(false);
@@ -104,7 +105,6 @@ const GameScreen = ({ puzzle, onClosePress }: GameScreenProps) => {
 		if (pieces.length > 0 && !gameOver) {
 			let puzzleComplete = true;
 			for (let i = 0; i < pieces.length; i++) {
-				// if (pieces[i].id === 11 && !pieces[i].done) {
 				if (!pieces[i].solved) {
 					puzzleComplete = false;
 					break;
@@ -228,9 +228,28 @@ const GameScreen = ({ puzzle, onClosePress }: GameScreenProps) => {
 		opacity: withTiming(isLoading ? 0 : 1, { duration: 500 }),
 	}));
 
-	const backButtonPressed = useSharedValue(false);
-	const animatedBackButtonStyle = useAnimatedStyle(() => ({
-		transform: [{ scale: backButtonPressed.value ? 0.9 : 1 }],
+	const boardAnimatedPosition = useAnimatedStyle(() => ({
+		transform: [{ translateY: withTiming(gameOver ? (WINDOW.height - BOARD.height) / 2 - BOARD.y : 0) }],
+	}));
+	const piecesAnimatedPosition = useAnimatedStyle(() => ({
+		transform: [{ translateY: withTiming(gameOver ? (WINDOW.height - BOARD.height) / 2 - BOARD.y : 0) }],
+	}));
+	const circleAnimatedPosition = useAnimatedStyle(() => ({
+		transform: [{ translateY: withTiming(gameOver ? WINDOW.height / 4 : 0) }],
+	}));
+
+	const [isHelpVisible, setIsHelpVisible] = useState(false);
+	const onHelpPress = () => {
+		setIsHelpVisible(true);
+		setTimeout(() => {
+			setIsHelpVisible(false);
+		}, 2500);
+	};
+	const helpAnimatedStyle = useAnimatedStyle(() => ({
+		transform: [
+			{ translateX: withTiming(isHelpVisible ? -0.02 * WINDOW.width : 0.5 * WINDOW.width) },
+			{ translateY: withTiming(isHelpVisible ? 0.02 * WINDOW.width : -((WINDOW.width / 2) * 4) / 3) },
+		],
 	}));
 
 	if (isLoading) {
@@ -244,35 +263,41 @@ const GameScreen = ({ puzzle, onClosePress }: GameScreenProps) => {
 	return (
 		<View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: Colors.red }}>
 			<Animated.View style={[{ ...StyleSheet.absoluteFillObject, backgroundColor: puzzle.color }, backgroundAnimatedColor]} />
-			<View
-				style={{
-					position: 'absolute',
-					left: BOARD.x,
-					top: BOARD.y,
-					width: BOARD.width,
-					height: BOARD.height,
-					backgroundColor: '#0001',
-					borderRadius: BOARD.width / 50,
-					borderColor: 'white',
-					borderWidth: StyleSheet.hairlineWidth,
-				}}
+			<Animated.View
+				style={[
+					{
+						position: 'absolute',
+						left: BOARD.x,
+						top: BOARD.y,
+						width: BOARD.width,
+						height: BOARD.height,
+						backgroundColor: '#0001',
+						borderRadius: BOARD.width / 50,
+						borderColor: 'white',
+						borderWidth: StyleSheet.hairlineWidth,
+					},
+					boardAnimatedPosition,
+				]}
 			/>
-			<View
-				style={{
-					position: 'absolute',
-					left: WINDOW.width / 2 - 0.75 * SIZE,
-					bottom: 0.085 * SIZE,
-					width: 1.5 * SIZE,
-					height: 1.5 * SIZE,
-					borderRadius: 0.75 * SIZE,
-					backgroundColor: Colors.coral,
-				}}>
+			<Animated.View
+				style={[
+					{
+						position: 'absolute',
+						left: WINDOW.width / 2 - 0.75 * SIZE,
+						bottom: 0.085 * SIZE,
+						width: 1.5 * SIZE,
+						height: 1.5 * SIZE,
+						borderRadius: 0.75 * SIZE,
+						backgroundColor: Colors.coral,
+					},
+					circleAnimatedPosition,
+				]}>
 				<LottieView
 					style={{ width: 1.5 * SIZE, height: 1.5 * SIZE, transform: [{ scale: 1.15 }] }}
 					source={Lotties.circle}
 					autoPlay
 				/>
-			</View>
+			</Animated.View>
 			<View
 				style={{
 					position: 'absolute',
@@ -283,35 +308,15 @@ const GameScreen = ({ puzzle, onClosePress }: GameScreenProps) => {
 					// backgroundColor: '#0004',
 				}}
 			/>
-
-			<Animated.View
-				style={[
-					{
-						position: 'absolute',
-						left: -SIZE / 3,
-						top: -SIZE / 2,
-						width: SIZE,
-						height: SIZE,
-						borderBottomRightRadius: SIZE / 2,
-						backgroundColor: Colors.red,
-					},
-					animatedBackButtonStyle,
-				]}>
-				<Pressable
-					style={{ position: 'absolute', left: 0.45 * SIZE, bottom: 0.1 * SIZE }}
-					onPressIn={() => {
-						backButtonPressed.value = true;
-					}}
-					onPressOut={() => {
-						backButtonPressed.value = false;
-					}}
-					onPress={onClosePress}>
-					<View>
-						<AntDesign name="arrowleft" size={SIZE / 3} color="white" />
-					</View>
-				</Pressable>
+			<CornerButton isLeft={true} iconFA={'arrow-left'} onPress={onClosePress} isVisible />
+			{!gameOver && <CornerButton isLeft={false} iconFA={'question'} onPress={onHelpPress} isVisible={!isHelpVisible} />}
+			<Animated.View style={[{ position: 'absolute', top: 0, right: 0, zIndex: 1000 }, helpAnimatedStyle]}>
+				<Image
+					source={{ uri: PictureUrl(puzzle.id) }}
+					style={{ width: WINDOW.width / 2, aspectRatio: 3 / 4, borderRadius: WINDOW.width / 16 }}
+				/>
 			</Animated.View>
-			<View>
+			<Animated.View style={piecesAnimatedPosition}>
 				{pieces.map(piece => (
 					<Piece
 						key={'piece' + piece.id}
@@ -324,7 +329,7 @@ const GameScreen = ({ puzzle, onClosePress }: GameScreenProps) => {
 						updatePiece={updatePiece}
 					/>
 				))}
-			</View>
+			</Animated.View>
 			<PanGestureHandler onGestureEvent={onGestureLeftScroll}>
 				<Animated.View
 					style={{

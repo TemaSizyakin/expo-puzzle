@@ -36,10 +36,7 @@ export default function App() {
 	useEffect(() => {
 		ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT).then();
 	}, []);
-	const [assetsLoaded] = useAssets([
-		...Object.values(Images.UI),
-		...Object.values(Images).flatMap(puzzle => (puzzle.cover ? [puzzle.cover] : [])),
-	]);
+	const [assetsLoaded] = useAssets([...Object.values(Images.UI), ...Object.values(Images.covers)]);
 	const [fontsLoaded] = useFonts(Fonts);
 	const [puzzles, setPuzzles] = useState<Array<Puzzle>>();
 	const [selectedPuzzle, setSelectedPuzzle] = useState(0);
@@ -127,7 +124,7 @@ export default function App() {
 				{screen === Screen.ERROR && <ErrorScreen error={loadingError} onRefreshPress={onRefreshPress} />}
 				{screen === Screen.MENU && puzzles && <MenuScreen slides={puzzles} onPlayPress={onPlayPress} />}
 				{screen === Screen.GAME && puzzles && <GameScreen puzzle={puzzles[selectedPuzzle]} onClosePress={onClosePress} />}
-				{/*{screen === Screen.MENU && <GameScreen puzzle={Puzzles[0]} onClosePress={() => {}} />}*/}
+				{/*{screen === Screen.MENU && <GameScreen puzzle={puzzles[selectedPuzzle]} onClosePress={() => {}} />}*/}
 				{isLoading && <LoadingScreen startClosed={screen === Screen.NONE} isLoaded={isLoaded} color={loadingColor} />}
 			</View>
 		</WindowSizeContext.Provider>

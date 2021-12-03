@@ -5,3 +5,5 @@ export const PuzzlesUrl = `${BaseUrl}/puzzles.json`;
 export const CoverUrl = (puzzleId: string) => `${BaseUrl}/images/${puzzleId}/cover.png`;
 
 export const PieceUrl = (puzzleId: string, pieceId: string) => `${BaseUrl}/images/${puzzleId}/${pieceId}.png`;
+
+export const PictureUrl = (puzzleId: string) => `${BaseUrl}/images/${puzzleId}/image.jpg`;

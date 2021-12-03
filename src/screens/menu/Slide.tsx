@@ -30,7 +30,7 @@ const Slide = ({ slide: { id, title, color } }: SlideProps) => {
 				<Text style={{ fontFamily: 'GandiaBold', fontSize: titleHeight / 2, color: 'white' }}>{title}</Text>
 			</View>
 			<View style={{ position: 'absolute', top: imageTop, justifyContent: 'center' }}>
-				<Image source={Images[id]?.cover ?? { uri: CoverUrl(id) }} style={imageSize} />
+				<Image source={Images.covers[id] ?? { uri: CoverUrl(id) }} style={imageSize} />
 			</View>
 		</View>
 	);

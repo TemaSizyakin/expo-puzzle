@@ -10,7 +10,7 @@ interface LoadingProps {
 	duration?: number;
 }
 
-const Loading = ({ size, isOpened, duration = 2000 }: LoadingProps) => {
+const Spinner = ({ size, isOpened, duration = 2000 }: LoadingProps) => {
 	const imageSize = 0.8 * size;
 	const pieceStyle: ImageStyle = { position: 'absolute', width: imageSize, height: imageSize };
 
@@ -55,4 +55,4 @@ const Loading = ({ size, isOpened, duration = 2000 }: LoadingProps) => {
 	);
 };
 
-export default Loading;
+export default Spinner;
