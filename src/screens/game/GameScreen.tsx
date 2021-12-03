@@ -1,7 +1,6 @@
-import React, { useContext, useEffect } from 'react';
-import { View, StyleSheet, Pressable } from 'react-native';
+import React, { useContext, useEffect, useRef } from 'react';
+import { View, StyleSheet, Pressable, Image } from 'react-native';
 import Colors from '../../res/Colors';
-import Images from '../../res/Images';
 import { WindowSizeContext } from '../../hooks/useWindowSize';
 import { useState } from 'react';
 import { AntDesign } from '@expo/vector-icons';
@@ -10,6 +9,7 @@ import Animated, { useAnimatedGestureHandler, useAnimatedStyle, useSharedValue, 
 import Piece, { PieceType } from './Piece';
 import { PanGestureHandler } from 'react-native-gesture-handler';
 import Lotties from '../../res/Lotties';
+import { PieceUrl } from '../../res/Urls';
 
 type Rect = {
 	x: number,
@@ -19,14 +19,12 @@ type Rect = {
 };
 const initRect: Rect = { x: 0, y: 0, width: 0, height: 0 };
 
-let ZINDEX = 10;
-
 interface GameScreenProps {
 	puzzle: { id: string, size: { x: number, y: number }, color: string };
-	onCloseGame: () => void;
+	onClosePress: () => void;
 }
 
-const GameScreen = ({ puzzle, onCloseGame }: GameScreenProps) => {
+const GameScreen = ({ puzzle, onClosePress }: GameScreenProps) => {
 	const [isLoading, setIsLoading] = useState(true);
 
 	const WINDOW = useContext(WindowSizeContext);
@@ -62,14 +60,15 @@ const GameScreen = ({ puzzle, onCloseGame }: GameScreenProps) => {
 	useEffect(() => {
 		scroll.value = withTiming(Math.floor((puzzle.size.x * puzzle.size.y) / 2), { duration: 1000 });
 	}, [scroll, puzzle]);
+	const topZIndex = useRef(10);
 
 	useEffect(() => {
 		const loadedPieces: Array<PieceType> = [];
 		for (let j = 0; j < puzzle.size.y; j++) {
 			for (let i = 0; i < puzzle.size.x; i++) {
 				const id = j + 1 + '' + (i + 1);
-				// const image = `https://heroku-puzzle.herokuapp.com/images/${puzzle.id}/${id}.png`;
-				const image = Images[puzzle.id][id];
+				const image = PieceUrl(puzzle.id, id);
+				// const image = Images[puzzle.id][id];
 				loadedPieces.push({ id, boardX: i, boardY: j, scrollX: 0, image, zIndex: 0, solved: false });
 			}
 		}
@@ -82,12 +81,12 @@ const GameScreen = ({ puzzle, onCloseGame }: GameScreenProps) => {
 		for (let l = 0; l < loadedPieces.length; l++) {
 			loadedPieces[l].scrollX = l;
 		}
-		// const prefetchPromises = loadedPieces.map(piece => Image.prefetch(piece.image));
-		// Promise.all(prefetchPromises).then(results => {
-		// 	console.log(results);
-		// 	setIsLoading(false);
-		// });
-		setIsLoading(false);
+		const prefetchPromises = loadedPieces.map(piece => Image.prefetch(piece.image));
+		Promise.all(prefetchPromises).then(results => {
+			console.log(results);
+			setIsLoading(false);
+		});
+		// setIsLoading(false);
 		setPieces(loadedPieces);
 		setPiecesInScroll(loadedPieces.length);
 	}, [puzzle]);
@@ -135,7 +134,7 @@ const GameScreen = ({ puzzle, onCloseGame }: GameScreenProps) => {
 			}
 		},
 		onEnd: ({ velocityX }) => {
-			const dest = Math.max(-0.45, Math.min(piecesInScroll - 0.55, scroll.value - velocityX / (2 * WINDOW.width)));
+			const dest = Math.max(-0.45, Math.min(piecesInScroll - 0.55, scroll.value - velocityX / WINDOW.width));
 			scroll.value = withSpring(Math.round(dest)); //withTiming(Math.round(dest), { duration: 200 });
 		},
 		onFinish: (_, context: { startX: number, moved: boolean }) => {
@@ -150,10 +149,12 @@ const GameScreen = ({ puzzle, onCloseGame }: GameScreenProps) => {
 
 	// noinspection DuplicatedCode
 	const onGestureRightScroll = useAnimatedGestureHandler({
-		onStart: (_, context: { startX: number }) => {
+		onStart: (_, context: { startX: number, moved: boolean }) => {
+			context.moved = false;
 			context.startX = WINDOW.width / 2 - scroll.value * SIZE;
 		},
-		onActive: ({ translationX }, context: { startX: number }) => {
+		onActive: ({ translationX }, context: { startX: number, moved: boolean }) => {
+			context.moved = true;
 			scroll.value = (WINDOW.width / 2 - context.startX - translationX) / SIZE;
 			if (piecesInScroll === 0) {
 				scroll.value = 0;
@@ -164,8 +165,8 @@ const GameScreen = ({ puzzle, onCloseGame }: GameScreenProps) => {
 			}
 		},
 		onEnd: ({ velocityX }) => {
-			const dest = Math.max(-0.45, Math.min(piecesInScroll - 0.55, scroll.value - velocityX / (2 * WINDOW.width)));
-			scroll.value = withSpring(Math.round(dest)); //withTiming(Math.round(dest)), { duration: 200 });
+			const dest = Math.max(-0.45, Math.min(piecesInScroll - 0.55, scroll.value - velocityX / WINDOW.width));
+			scroll.value = withSpring(Math.round(dest)); //withTiming(Math.round(dest), { duration: 200 });
 		},
 		onFinish: (_, context: { startX: number, moved: boolean }) => {
 			if (!context.moved) {
@@ -200,7 +201,7 @@ const GameScreen = ({ puzzle, onCloseGame }: GameScreenProps) => {
 					boardY = targetY;
 					solved = true;
 				} else {
-					zIndex = ++ZINDEX;
+					zIndex = ++topZIndex.current;
 				}
 				return { id, boardX, boardY, scrollX, image: piece.image, zIndex, solved };
 			}
@@ -232,13 +233,13 @@ const GameScreen = ({ puzzle, onCloseGame }: GameScreenProps) => {
 		transform: [{ scale: backButtonPressed.value ? 0.9 : 1 }],
 	}));
 
-	// if (isLoading) {
-	// 	return (
-	// 		<View style={{ ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.red }}>
-	// 			<LottieView style={{ width: window.width / 2, height: window.width / 4 }} source={Lotties.loading} autoPlay />
-	// 		</View>
-	// 	);
-	// }
+	if (isLoading) {
+		return (
+			<View style={{ ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.red }}>
+				<LottieView style={{ width: WINDOW.width / 2, height: WINDOW.width / 4 }} source={Lotties.loading} autoPlay />
+			</View>
+		);
+	}
 
 	return (
 		<View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: Colors.red }}>
@@ -264,7 +265,7 @@ const GameScreen = ({ puzzle, onCloseGame }: GameScreenProps) => {
 					width: 1.5 * SIZE,
 					height: 1.5 * SIZE,
 					borderRadius: 0.75 * SIZE,
-					backgroundColor: '#ff2d55bb',
+					backgroundColor: Colors.coral,
 				}}>
 				<LottieView
 					style={{ width: 1.5 * SIZE, height: 1.5 * SIZE, transform: [{ scale: 1.15 }] }}
@@ -304,7 +305,7 @@ const GameScreen = ({ puzzle, onCloseGame }: GameScreenProps) => {
 					onPressOut={() => {
 						backButtonPressed.value = false;
 					}}
-					onPress={onCloseGame}>
+					onPress={onClosePress}>
 					<View>
 						<AntDesign name="arrowleft" size={SIZE / 3} color="white" />
 					</View>
@@ -349,7 +350,7 @@ const GameScreen = ({ puzzle, onCloseGame }: GameScreenProps) => {
 				/>
 			</PanGestureHandler>
 			{gameOver && (
-				<View style={StyleSheet.absoluteFill} pointerEvents="none">
+				<View style={{ ...StyleSheet.absoluteFillObject, zIndex: 1000 }} pointerEvents="none">
 					<LottieView source={Lotties.confetti} autoPlay loop style={StyleSheet.absoluteFill} />
 				</View>
 			)}

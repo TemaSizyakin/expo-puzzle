@@ -1,6 +1,7 @@
 import React, { useContext } from 'react';
-import { View, StyleSheet, Image, Text } from 'react-native';
+import { View, StyleSheet, Text, Image } from 'react-native';
 import { WindowSizeContext } from '../../hooks/useWindowSize';
+import { CoverUrl } from '../../res/Urls';
 import Images from '../../res/Images';
 
 export interface SlideProps {
@@ -29,8 +30,13 @@ const Slide = ({ slide: { id, title, color } }: SlideProps) => {
 				<Text style={{ fontFamily: 'GandiaBold', fontSize: titleHeight / 2, color: 'white' }}>{title}</Text>
 			</View>
 			<View style={{ position: 'absolute', top: imageTop, justifyContent: 'center' }}>
+				{/*<Image source={{ uri: CoverUrl(id) }} style={imageSize} defaultSource={Images[id].cover} />*/}
 				<Image source={Images[id].cover} style={imageSize} />
 			</View>
+			{/*<Svg width={imageSize.width} height={imageSize.height} style={{ position: 'absolute', top: imageTop }}>*/}
+			{/*	/!*<Rect x="0" y="0" width={imageSize.width} height={imageSize.height} fill="green" />*!/*/}
+			{/*	<Image x="0" y="0" width={imageSize.width} height={imageSize.height} href={{ uri: CoverUrl(id) }} />*/}
+			{/*</Svg>*/}
 		</View>
 	);
 };

@@ -11,7 +11,7 @@ export type PieceType = {
 	boardX: number,
 	boardY: number,
 	scrollX: number,
-	image: number,
+	image: string,
 	zIndex: number,
 	solved: boolean,
 };
@@ -27,7 +27,7 @@ interface PieceProps {
 }
 
 const Piece = ({ piece, size, scroll, scrollToAbsolute, boardToAbsolute, absoluteToBoard, updatePiece }: PieceProps) => {
-	const translateX = useSharedValue(0);
+	const translateX = useSharedValue(10 * size);
 	const translateY = useSharedValue(0);
 	const isAnimated = useSharedValue(false);
 	const pieceScroll = useSharedValue(piece.scrollX);
@@ -89,10 +89,8 @@ const Piece = ({ piece, size, scroll, scrollToAbsolute, boardToAbsolute, absolut
 			const absDistance = Math.abs(distance);
 			const scale = absDistance >= 1 ? 0.6 : 1 - 0.4 * absDistance;
 			const rotate = distance < -1 ? '45deg' : distance > 1 ? '-45deg' : -45 * distance + 'deg';
-			const opacity = absDistance >= 3.5 ? 0 : 1 - absDistance / 3.5;
 			return {
 				transform: [{ translateX: translateX.value }, { translateY: translateY.value }, { scale }, { rotate }],
-				opacity,
 				zIndex: piece.zIndex,
 			};
 		}
@@ -125,7 +123,7 @@ const Piece = ({ piece, size, scroll, scrollToAbsolute, boardToAbsolute, absolut
 			<Animated.View style={[{ position: 'absolute', width: size, height: size }, animatedStyle]} pointerEvents={'box-only'}>
 				<Image
 					// source={{ uri: piece.image }}
-					source={piece.image}
+					source={{ uri: piece.image }}
 					style={{
 						position: 'absolute',
 						width: size,

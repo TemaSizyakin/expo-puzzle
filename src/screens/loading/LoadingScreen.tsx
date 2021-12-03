@@ -1,6 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
-import Colors from '../../res/Colors';
 import Shutters from './Shutters';
 import Loading from './Loading';
 import { WindowSizeContext } from '../../hooks/useWindowSize';
@@ -8,9 +7,10 @@ import { WindowSizeContext } from '../../hooks/useWindowSize';
 interface LoadingScreenProps {
 	startClosed: boolean;
 	isLoaded: boolean;
+	color: string;
 }
 
-const LoadingScreen = ({ startClosed, isLoaded }: LoadingScreenProps) => {
+const LoadingScreen = ({ startClosed, isLoaded, color }: LoadingScreenProps) => {
 	const window = useContext(WindowSizeContext);
 	const [isOpened, setIsOpened] = useState(!startClosed);
 	useEffect(() => {
@@ -18,7 +18,7 @@ const LoadingScreen = ({ startClosed, isLoaded }: LoadingScreenProps) => {
 	}, [isLoaded]);
 	return (
 		<View style={StyleSheet.absoluteFill}>
-			<Shutters isOpened={isOpened} backgroundColor={Colors.royalblue} />
+			<Shutters isOpened={isOpened} backgroundColor={color} />
 			<Loading isOpened={isOpened} size={Math.min(window.width, window.height) / 3} />
 		</View>
 	);

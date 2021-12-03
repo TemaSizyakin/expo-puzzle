@@ -8,14 +8,19 @@ import { useFonts } from 'expo-font';
 import { useAssets } from 'expo-asset';
 import Images from './src/res/Images';
 import Fonts from './src/res/Fonts';
-import Puzzles from './src/res/Puzzles';
 import LoadingScreen from './src/screens/loading/LoadingScreen';
 import GameScreen from './src/screens/game/GameScreen';
 import { BackHandler } from 'react-native';
 import * as ScreenOrientation from 'expo-screen-orientation';
+import ErrorScreen from './src/screens/error/ErrorScreen';
+import Colors from './src/res/Colors';
+import { PuzzlesUrl } from './src/res/Urls';
+
+export type Puzzle = { id: string, title: string, color: string, size: { x: number, y: number } };
 
 enum Screen {
 	NONE,
+	ERROR,
 	MENU,
 	GAME,
 }
@@ -24,40 +29,59 @@ export default function App() {
 	const [screen, setScreen] = useState(Screen.NONE);
 	const [isLoading, setIsLoading] = useState(true);
 	const [isLoaded, setIsLoaded] = useState(false);
+	const [loadingColor, setLoadingColor] = useState<string>(Colors.royalblue);
+	const [loadingError, setLoadingError] = useState<string>();
+	const [needRefresh, setNeedRefresh] = useState(true);
 	const [windowSize, onContainerLayout] = useWindowSize();
 	useEffect(() => {
-		ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT);
+		ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT).then();
 	}, []);
-	const ui = Object.values(Images.UI);
-	const covers = Puzzles.map(puzzle => Images[puzzle.id].cover);
-	const [puzzle, setPuzzle] = useState(0);
-	// const [assetsLoaded] =
-	useAssets([...ui, ...covers]);
-	// const [fontsLoaded] =
 	useFonts(Fonts);
-	// useEffect(() => {
-	// 	if (fontsLoaded && !!assetsLoaded) {
-	// 		setScreen(Screen.MENU);
-	// 		setIsLoaded(true);
-	// 		setTimeout(() => { setIsLoading(false); }, 1000);
-	// 	}
-	// }, [fontsLoaded, assetsLoaded]);
+	useAssets(Object.values(Images.UI));
+	const [puzzles, setPuzzles] = useState<Array<Puzzle>>();
+	const [selectedPuzzle, setSelectedPuzzle] = useState(0);
 	useEffect(() => {
-		setTimeout(() => {
-			setScreen(Screen.MENU);
-			setIsLoaded(true);
-			setTimeout(() => {
-				setIsLoading(false);
-			}, 1000);
-		}, 1000);
-	}, []);
+		if (needRefresh) {
+			setNeedRefresh(false);
+			const getPuzzlesAsync = async () => {
+				try {
+					const response = await fetch(PuzzlesUrl);
+					const json = await response.json();
+					return Promise.resolve(json);
+				} catch (e: unknown) {
+					if (typeof e === 'string') {
+						setLoadingError(e);
+					} else if (e instanceof Error) {
+						setLoadingError(e.message);
+					}
+					return Promise.reject();
+				}
+			};
+			getPuzzlesAsync()
+				.then(data => {
+					setPuzzles(data);
+					setScreen(Screen.MENU);
+					setIsLoaded(true);
+				})
+				.catch(() => {
+					setScreen(Screen.ERROR);
+					setIsLoaded(true);
+				})
+				.finally(() => {
+					setTimeout(() => {
+						setIsLoading(false);
+					}, 1000);
+				});
+		}
+	}, [needRefresh]);
 
-	const onPlay = (index: number) => {
-		setPuzzle(index);
+	const onPlayPress = (index: number) => {
+		setSelectedPuzzle(index);
 		setScreen(Screen.GAME);
 	};
 
-	const onCloseGame = () => {
+	const onClosePress = () => {
+		setLoadingColor(Colors.red);
 		setIsLoaded(false);
 		setIsLoading(true);
 		setTimeout(() => {
@@ -69,12 +93,21 @@ export default function App() {
 		}, 1000);
 	};
 
+	const onRefreshPress = () => {
+		console.log('refresh', isLoading, needRefresh);
+		if (!isLoading) {
+			setIsLoaded(false);
+			setIsLoading(true);
+			setNeedRefresh(true);
+		}
+	};
+
 	if (Platform.OS === 'android') {
 		// eslint-disable-next-line react-hooks/rules-of-hooks
 		useEffect(() => {
 			const backAction = () => {
 				if (screen === Screen.GAME && !isLoading) {
-					onCloseGame();
+					onClosePress();
 				}
 				return true;
 			};
@@ -87,10 +120,11 @@ export default function App() {
 		<WindowSizeContext.Provider value={windowSize}>
 			<View style={{ flex: 1 }} onLayout={onContainerLayout}>
 				<StatusBar hidden />
-				{screen === Screen.MENU && <MenuScreen slides={Puzzles} onPlay={onPlay} />}
-				{screen === Screen.GAME && <GameScreen puzzle={Puzzles[puzzle]} onCloseGame={onCloseGame} />}
-				{/*{screen === Screen.MENU && <GameScreen puzzle={Puzzles[0]} onCloseGame={() => {}} />}*/}
-				{isLoading && <LoadingScreen startClosed={screen === Screen.NONE} isLoaded={isLoaded} />}
+				{screen === Screen.ERROR && <ErrorScreen error={loadingError} onRefreshPress={onRefreshPress} />}
+				{screen === Screen.MENU && puzzles && <MenuScreen slides={puzzles} onPlayPress={onPlayPress} />}
+				{screen === Screen.GAME && puzzles && <GameScreen puzzle={puzzles[selectedPuzzle]} onClosePress={onClosePress} />}
+				{/*{screen === Screen.MENU && <GameScreen puzzle={Puzzles[0]} onClosePress={() => {}} />}*/}
+				{isLoading && <LoadingScreen startClosed={screen === Screen.NONE} isLoaded={isLoaded} color={loadingColor} />}
 			</View>
 		</WindowSizeContext.Provider>
 	);

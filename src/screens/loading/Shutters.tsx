@@ -6,13 +6,12 @@ import { WindowSizeContext } from '../../hooks/useWindowSize';
 interface ShuttersProps {
 	isOpened: boolean;
 	backgroundColor: string;
-	duration?: number;
 }
 
-const Shutters = ({ isOpened, backgroundColor, duration = 600 }: ShuttersProps) => {
+const Shutters = ({ isOpened, backgroundColor }: ShuttersProps) => {
 	const window = useContext(WindowSizeContext);
 	const borderRadius = Math.min(window.width, window.height) / 4;
-
+	const duration = 600;
 	const opened = useSharedValue(isOpened ? 1 : 0);
 	useEffect(() => {
 		opened.value = withTiming(isOpened ? 1 : 0, { duration });

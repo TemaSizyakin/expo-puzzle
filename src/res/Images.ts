@@ -5,7 +5,7 @@ const Images: { [key: string]: any } = {
 		arrowIcon: require('../../assets/images/arrow.png'),
 	},
 	bullfinch: {
-		cover: require('../../assets/images/bullfinch/bullfinch.png'),
+		cover: require('../../assets/images/bullfinch/cover.png'),
 		11: require('../../assets/images/bullfinch/11.png'),
 		12: require('../../assets/images/bullfinch/12.png'),
 		13: require('../../assets/images/bullfinch/13.png'),
@@ -20,7 +20,7 @@ const Images: { [key: string]: any } = {
 		43: require('../../assets/images/bullfinch/43.png'),
 	},
 	shiba: {
-		cover: require('../../assets/images/shiba/shiba.png'),
+		cover: require('../../assets/images/shiba/cover.png'),
 		11: require('../../assets/images/shiba/11.png'),
 		12: require('../../assets/images/shiba/12.png'),
 		13: require('../../assets/images/shiba/13.png'),
@@ -35,7 +35,7 @@ const Images: { [key: string]: any } = {
 		43: require('../../assets/images/shiba/43.png'),
 	},
 	house: {
-		cover: require('../../assets/images/house/house.png'),
+		cover: require('../../assets/images/house/cover.png'),
 		11: require('../../assets/images/house/11.png'),
 		12: require('../../assets/images/house/12.png'),
 		13: require('../../assets/images/house/13.png'),
