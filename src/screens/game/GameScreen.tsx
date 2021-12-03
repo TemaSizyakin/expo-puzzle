@@ -83,7 +83,7 @@ const GameScreen = ({ puzzle, onClosePress }: GameScreenProps) => {
 		}
 		const prefetchPromises = loadedPieces.map(piece => Image.prefetch(piece.image));
 		Promise.all(prefetchPromises).then(results => {
-			console.log(results);
+			// console.log(results);
 			setIsLoading(false);
 		});
 		// setIsLoading(false);

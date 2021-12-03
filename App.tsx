@@ -36,44 +36,49 @@ export default function App() {
 	useEffect(() => {
 		ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT).then();
 	}, []);
-	useFonts(Fonts);
-	useAssets(Object.values(Images.UI));
+	const [assetsLoaded] = useAssets([
+		...Object.values(Images.UI),
+		...Object.values(Images).flatMap(puzzle => (puzzle.cover ? [puzzle.cover] : [])),
+	]);
+	const [fontsLoaded] = useFonts(Fonts);
 	const [puzzles, setPuzzles] = useState<Array<Puzzle>>();
 	const [selectedPuzzle, setSelectedPuzzle] = useState(0);
 	useEffect(() => {
-		if (needRefresh) {
-			setNeedRefresh(false);
-			const getPuzzlesAsync = async () => {
-				try {
-					const response = await fetch(PuzzlesUrl);
-					const json = await response.json();
-					return Promise.resolve(json);
-				} catch (e: unknown) {
-					if (typeof e === 'string') {
-						setLoadingError(e);
-					} else if (e instanceof Error) {
-						setLoadingError(e.message);
+		if (fontsLoaded && !!assetsLoaded) {
+			if (needRefresh) {
+				setNeedRefresh(false);
+				const getPuzzlesAsync = async () => {
+					try {
+						const response = await fetch(PuzzlesUrl);
+						const json = await response.json();
+						return Promise.resolve(json);
+					} catch (e: unknown) {
+						if (typeof e === 'string') {
+							setLoadingError(e);
+						} else if (e instanceof Error) {
+							setLoadingError(e.message);
+						}
+						return Promise.reject();
 					}
-					return Promise.reject();
-				}
-			};
-			getPuzzlesAsync()
-				.then(data => {
-					setPuzzles(data);
-					setScreen(Screen.MENU);
-					setIsLoaded(true);
-				})
-				.catch(() => {
-					setScreen(Screen.ERROR);
-					setIsLoaded(true);
-				})
-				.finally(() => {
-					setTimeout(() => {
-						setIsLoading(false);
-					}, 1000);
-				});
+				};
+				getPuzzlesAsync()
+					.then(data => {
+						setPuzzles(data);
+						setScreen(Screen.MENU);
+						setIsLoaded(true);
+					})
+					.catch(() => {
+						setScreen(Screen.ERROR);
+						setIsLoaded(true);
+					})
+					.finally(() => {
+						setTimeout(() => {
+							setIsLoading(false);
+						}, 1000);
+					});
+			}
 		}
-	}, [needRefresh]);
+	}, [needRefresh, fontsLoaded, assetsLoaded]);
 
 	const onPlayPress = (index: number) => {
 		setSelectedPuzzle(index);
@@ -94,7 +99,6 @@ export default function App() {
 	};
 
 	const onRefreshPress = () => {
-		console.log('refresh', isLoading, needRefresh);
 		if (!isLoading) {
 			setIsLoaded(false);
 			setIsLoading(true);

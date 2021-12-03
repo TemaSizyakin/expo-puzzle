@@ -1,4 +1,4 @@
-export const BaseUrl = 'https://heroku-puzzle.herokuapp.com/';
+const BaseUrl = 'https://heroku-puzzle.herokuapp.com/';
 
 export const PuzzlesUrl = `${BaseUrl}/puzzles.json`;
 

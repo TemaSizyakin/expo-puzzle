@@ -7,10 +7,6 @@ import { WindowSizeContext } from '../../hooks/useWindowSize';
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import Colors from '../../res/Colors';
 import { Puzzle } from '../../../App';
-import LottieView from 'lottie-react-native';
-import Lotties from '../../res/Lotties';
-import { useAssets } from 'expo-asset';
-import Images from '../../res/Images';
 
 interface HomeScreenProps {
 	slides: Array<Puzzle>;
@@ -31,14 +27,7 @@ const MenuScreen = ({ slides, onPlayPress }: HomeScreenProps) => {
 		setIndex(index < slides.length - 1 ? index + 1 : 0);
 	};
 
-	const [isLoading, setIsLoading] = useState(true);
-	const covers = slides.map(puzzle => Images[puzzle.id].cover);
-	const [assetsLoaded] = useAssets(covers);
-	useEffect(() => {
-		if (assetsLoaded) {
-			setIsLoading(false);
-		}
-	}, [assetsLoaded]);
+	// const [isLoading, setIsLoading] = useState(true);
 	// useEffect(() => {
 	// 	const prefetchPromises = slides.map(slide => Image.prefetch(CoverUrl(slide.id)));
 	// 	Promise.all(prefetchPromises).then(results => {
@@ -46,6 +35,11 @@ const MenuScreen = ({ slides, onPlayPress }: HomeScreenProps) => {
 	// 		setIsLoading(false);
 	// 	});
 	// }, [slides]);
+	// if (isLoading) {
+	// 	return (<View style={{...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', backgroundColor: currentSlide.color,}}>
+	// 		<LottieView style={{ width: WINDOW.width / 2, height: WINDOW.width / 4 }} source={Lotties.loading} autoPlay />
+	// 	</View>);
+	// }
 
 	// Animated style of Play button with slight movements
 	const gestureX = useSharedValue(0);
@@ -66,9 +60,7 @@ const MenuScreen = ({ slides, onPlayPress }: HomeScreenProps) => {
 
 	// Animated style of circular colored fill view after pressing the Play button
 	const fill = useSharedValue(0);
-	const fillColor = useSharedValue(Colors.red);
 	const fillAnimatedStyle = useAnimatedStyle(() => ({
-		backgroundColor: fillColor.value,
 		transform: [{ scale: 8 * fill.value }],
 	}));
 	const onPlayButtonPress = () => {
@@ -80,20 +72,6 @@ const MenuScreen = ({ slides, onPlayPress }: HomeScreenProps) => {
 			playButtonOpacity.value = withTiming(0);
 		}
 	};
-
-	if (isLoading) {
-		return (
-			<View
-				style={{
-					...StyleSheet.absoluteFillObject,
-					alignItems: 'center',
-					justifyContent: 'center',
-					backgroundColor: currentSlide.color,
-				}}>
-				<LottieView style={{ width: WINDOW.width / 2, height: WINDOW.width / 4 }} source={Lotties.loading} autoPlay />
-			</View>
-		);
-	}
 
 	return (
 		<View style={StyleSheet.absoluteFill}>
@@ -116,6 +94,7 @@ const MenuScreen = ({ slides, onPlayPress }: HomeScreenProps) => {
 						width: 0.25 * WINDOW.height,
 						height: 0.25 * WINDOW.height,
 						borderRadius: 0.25 * WINDOW.height,
+						backgroundColor: Colors.red,
 					},
 					fillAnimatedStyle,
 				]}
