@@ -4,6 +4,7 @@
 		"slug": "expo-puzzle",
 		"version": "1.0.0",
 		"orientation": "portrait",
+		"primaryColor": "#007aff",
 		"icon": "./assets/icon.png",
 		"splash": {
 			"image": "./assets/splash.png",
