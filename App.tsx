@@ -15,6 +15,7 @@ import * as ScreenOrientation from 'expo-screen-orientation';
 import ErrorScreen from './src/screens/error/ErrorScreen';
 import Colors from './src/res/Colors';
 import { PuzzlesUrl } from './src/res/Urls';
+import {GestureHandlerRootView} from "react-native-gesture-handler";
 
 export type Puzzle = { id: string, title: string, color: string, size: { x: number, y: number } };
 
@@ -118,6 +119,7 @@ export default function App() {
 	}
 
 	return (
+		<GestureHandlerRootView style={{flex: 1}}>
 		<WindowSizeContext.Provider value={windowSize}>
 			<View style={{ flex: 1 }} onLayout={onContainerLayout}>
 				<StatusBar hidden />
@@ -128,5 +130,6 @@ export default function App() {
 				{isLoading && <LoadingScreen startClosed={screen === Screen.NONE} isLoaded={isLoaded} color={loadingColor} />}
 			</View>
 		</WindowSizeContext.Provider>
+		</GestureHandlerRootView>
 	);
 }

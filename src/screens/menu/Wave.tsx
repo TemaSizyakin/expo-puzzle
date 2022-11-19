@@ -1,4 +1,4 @@
-import MaskedView from '@react-native-community/masked-view';
+import MaskedView from '@react-native-masked-view/masked-view';
 import React, { ReactElement, useContext } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedProps, useAnimatedStyle, useDerivedValue } from 'react-native-reanimated';

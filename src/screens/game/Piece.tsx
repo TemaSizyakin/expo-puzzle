@@ -122,7 +122,6 @@ const Piece = ({ piece, size, scroll, scrollToAbsolute, boardToAbsolute, absolut
 		<PanGestureHandler onGestureEvent={onGestureEvent} enabled={!piece.solved}>
 			<Animated.View style={[{ position: 'absolute', width: size, height: size }, animatedStyle]} pointerEvents={'box-only'}>
 				<Image
-					// source={{ uri: piece.image }}
 					source={{ uri: piece.image }}
 					style={{
 						position: 'absolute',
