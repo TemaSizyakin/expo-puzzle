@@ -11,4 +11,4 @@ For UI/UX design I used Figma. Here's the project with Flow prototype:\
 You can try this app on your device with the [Expo Go](https://expo.dev/client). \
 Just scan this QR-code with the mobile app:
 
-[![QR](readme/eas-qr.svg)](https://expo.dev/%40afctemka/expo-puzzle?serviceType=eas&distribution=expo-go&scheme=exp%2Bexpo-puzzle&channel=main&sdkVersion=47.0.0)
+![QR](readme/eas-qr.svg)
